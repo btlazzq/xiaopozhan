@@ -1,8 +1,9 @@
-# 必须从仓库根目录部署（Railway Root Directory 留空），才能读到 xiaopozhan-dev 里的 mp3/图片
+# 仓库根目录部署（Railway Root Directory 留空）
 [build]
-builder = "nixpacks"
-buildCommand = "test -f xiaopozhan-server/seed-assets/music/mp3/intro.mp3 && echo 'seed-assets OK' || (echo 'seed-assets MISSING' && exit 1) && cd xiaopozhan-server && npm install"
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "cd xiaopozhan-server && npm run start:deploy"
 restartPolicyType = "on_failure"
+healthcheckPath = "/api/settings/public"
+healthcheckTimeout = 300
