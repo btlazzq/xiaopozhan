@@ -15,8 +15,8 @@ function resolveAssetsDir() {
     return process.env.ASSETS_DIR;
   }
   const candidates = [
-    path.resolve(__dirname, '../../xiaopozhan-dev/src/assets'),
     path.resolve(__dirname, '../seed-assets'),
+    path.resolve(__dirname, '../../xiaopozhan-dev/src/assets'),
   ];
   for (const dir of candidates) {
     if (fs.existsSync(dir)) return dir;
