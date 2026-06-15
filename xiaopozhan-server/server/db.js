@@ -149,6 +149,29 @@ function initDb() {
   if (!contentCols.includes('spine_color_right')) {
     db.exec('ALTER TABLE contents ADD COLUMN spine_color_right TEXT');
   }
+
+  ensureAssetsTable();
+}
+
+function ensureAssetsTable() {
+  const row = db.prepare(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name='assets'"
+  ).get();
+  if (!row) {
+    db.exec(`
+      CREATE TABLE assets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT,
+        filename TEXT,
+        url TEXT,
+        size INTEGER,
+        mime_type TEXT,
+        category TEXT,
+        created_at TEXT DEFAULT (datetime('now','localtime'))
+      )
+    `);
+    console.log('✓ 已创建 assets 表');
+  }
 }
 
 initDb();

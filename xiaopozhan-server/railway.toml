@@ -1,5 +1,6 @@
 [build]
 builder = "nixpacks"
+buildCommand = "test -f seed-assets/music/mp3/intro.mp3 && echo 'seed-assets OK' || (echo 'seed-assets MISSING' && ls -laR seed-assets 2>/dev/null; exit 1) && npm install"
 
 [deploy]
 startCommand = "npm run start:deploy"

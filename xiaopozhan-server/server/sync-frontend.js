@@ -11,16 +11,28 @@ const { uploadsDir, ensureUploadsDir } = require('./paths');
 const force = process.argv.includes('--force') || process.env.SYNC_FORCE === '1';
 
 function resolveAssetsDir() {
-  if (process.env.ASSETS_DIR && fs.existsSync(process.env.ASSETS_DIR)) {
-    return process.env.ASSETS_DIR;
+  if (process.env.ASSETS_DIR) {
+    const probe = path.join(process.env.ASSETS_DIR, 'music/mp3/intro.mp3');
+    if (fs.existsSync(probe)) return process.env.ASSETS_DIR;
+    console.warn('  ASSETS_DIR 已设置但缺少 intro.mp3:', process.env.ASSETS_DIR);
   }
   const candidates = [
     path.resolve(__dirname, '../seed-assets'),
     path.resolve(__dirname, '../../xiaopozhan-dev/src/assets'),
   ];
   for (const dir of candidates) {
-    if (fs.existsSync(dir)) return dir;
+    const probe = path.join(dir, 'music/mp3/intro.mp3');
+    if (fs.existsSync(probe)) {
+      try {
+        const mp3Count = fs.readdirSync(path.join(dir, 'music/mp3')).length;
+        console.log(`  使用资源目录: ${dir}（mp3 ${mp3Count} 个）`);
+      } catch {
+        console.log(`  使用资源目录: ${dir}`);
+      }
+      return dir;
+    }
   }
+  console.error('  ✗ 未找到有效资源目录，候选:', candidates.join(' | '));
   return candidates[0];
 }
 
