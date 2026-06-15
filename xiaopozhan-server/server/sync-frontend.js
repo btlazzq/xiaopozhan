@@ -75,6 +75,56 @@ function copyAsset(relPath) {
   return `/uploads/${UPLOAD_SUBDIR}/${basename}`;
 }
 
+function uploadUrlToPath(url) {
+  if (!url) return null;
+  const rel = String(url).replace(/^\/uploads\//, '');
+  if (!rel || rel === String(url)) return null;
+  return path.join(uploadsDir, rel);
+}
+
+/** 数据库有 URL 但 Volume 上文件丢失时，仍需重新复制 */
+function uploadUrlExists(url) {
+  const filePath = uploadUrlToPath(url);
+  return filePath && fs.existsSync(filePath);
+}
+
+function urlNeedsRepair(url) {
+  return !url || !String(url).trim() || !uploadUrlExists(url);
+}
+
+function parseMediaList(str) {
+  if (!str) return [];
+  try {
+    const list = JSON.parse(str);
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
+function isMediaJsonBroken(str) {
+  const list = parseMediaList(str);
+  if (!list.length) return true;
+  return list.some((f) => urlNeedsRepair(f.fileUrl));
+}
+
+function momentMediaJson(content) {
+  if (content === '嘿嘿') {
+    const videoUrl = copyAsset('liberty/moment_video/sp1.mp4');
+    const videoCover = copyAsset('liberty/moment_video/sp_cover1.png');
+    return videoUrl
+      ? JSON.stringify([{ fileUrl: videoUrl, fileType: 'video', coverUrl: videoCover }])
+      : '[]';
+  }
+  if (content === '咩') {
+    const imageUrl = copyAsset('liberty/moment_image/202411.png');
+    return imageUrl
+      ? JSON.stringify([{ fileUrl: imageUrl, fileType: 'image' }])
+      : '[]';
+  }
+  return '[]';
+}
+
 function upsertContent(type, no, data) {
   const existing = no != null
     ? db.prepare('SELECT id FROM contents WHERE type = ? AND no = ?').get(type, no)
@@ -111,33 +161,11 @@ function upsertContent(type, no, data) {
 
 function syncMoments() {
   console.log('\n【瞬间 /liberty】');
-  const videoUrl = copyAsset('liberty/moment_video/sp1.mp4');
-  const videoCover = copyAsset('liberty/moment_video/sp_cover1.png');
-  const imageUrl = copyAsset('liberty/moment_image/202411.png');
 
   const moments = [
-    {
-      content: '嘿嘿',
-      publish_time: '2025-08-09 17:36:05',
-      sort: 30,
-      media_json: videoUrl
-        ? JSON.stringify([{ fileUrl: videoUrl, fileType: 'video', coverUrl: videoCover }])
-        : '[]'
-    },
-    {
-      content: '咩',
-      publish_time: '2025-08-09 17:36:05',
-      sort: 20,
-      media_json: imageUrl
-        ? JSON.stringify([{ fileUrl: imageUrl, fileType: 'image' }])
-        : '[]'
-    },
-    {
-      content: '瞬间页DIV',
-      publish_time: '2025-08-09 17:36:05',
-      sort: 10,
-      media_json: '[]'
-    }
+    { content: '嘿嘿', publish_time: '2025-08-09 17:36:05', sort: 30 },
+    { content: '咩', publish_time: '2025-08-09 17:36:05', sort: 20 },
+    { content: '瞬间页DIV', publish_time: '2025-08-09 17:36:05', sort: 10 }
   ];
 
   const count = db.prepare("SELECT COUNT(*) as c FROM contents WHERE type='moment'").get().c;
@@ -147,16 +175,14 @@ function syncMoments() {
     ).all();
     let repaired = 0;
     for (const m of moments) {
-      if (!m.media_json || m.media_json === '[]') continue;
       const row = rows.find((r) => r.content === m.content);
       if (!row) continue;
-      let list = [];
-      try { list = JSON.parse(row.media_json || '[]'); } catch { list = []; }
-      const broken = !list.length || list.some((f) => !f.fileUrl);
-      if (!broken) continue;
+      if (!isMediaJsonBroken(row.media_json)) continue;
+      const media_json = momentMediaJson(m.content);
+      if (media_json === '[]') continue;
       db.prepare(`
         UPDATE contents SET media_json=?, updated_at=datetime('now','localtime') WHERE id=?
-      `).run(m.media_json, row.id);
+      `).run(media_json, row.id);
       console.log(`  ✓ 补全瞬间: ${m.content}`);
       repaired++;
     }
@@ -168,10 +194,11 @@ function syncMoments() {
   }
 
   for (const m of moments) {
+    const media_json = momentMediaJson(m.content);
     db.prepare(`
       INSERT INTO contents (type, title, content, media_json, status, sort, publish_time)
       VALUES ('moment', ?, ?, ?, 'published', ?, ?)
-    `).run(m.content, m.content, m.media_json, m.sort, m.publish_time);
+    `).run(m.content, m.content, media_json, m.sort, m.publish_time);
     console.log(`  ✓ 瞬间: ${m.content}`);
   }
 }
@@ -215,8 +242,8 @@ function syncMusic() {
         repaired++;
         continue;
       }
-      const needMedia = !row.media_url || !String(row.media_url).trim();
-      const needCover = !row.cover_url || !String(row.cover_url).trim();
+      const needMedia = urlNeedsRepair(row.media_url);
+      const needCover = urlNeedsRepair(row.cover_url);
       if (!needMedia && !needCover) continue;
       const media_url = needMedia ? copyAsset(t.mp3) : row.media_url;
       const cover_url = needCover ? copyAsset(t.cover) : row.cover_url;
@@ -259,9 +286,13 @@ function syncVideo() {
     const row = db.prepare(
       'SELECT id, media_url, cover_url FROM contents WHERE type = ? AND no = 1'
     ).get('video');
-    if (row && (!row.media_url || !row.cover_url)) {
-      const media_url = row.media_url || copyAsset('liberty/moment_video/sp1.mp4');
-      const cover_url = row.cover_url || copyAsset('music/mp4/cover/v0531.png');
+    if (row && (urlNeedsRepair(row.media_url) || urlNeedsRepair(row.cover_url))) {
+      const media_url = uploadUrlExists(row.media_url)
+        ? row.media_url
+        : copyAsset('liberty/moment_video/sp1.mp4');
+      const cover_url = uploadUrlExists(row.cover_url)
+        ? row.cover_url
+        : copyAsset('music/mp4/cover/v0531.png');
       db.prepare(`
         UPDATE contents SET media_url=?, cover_url=?, updated_at=datetime('now','localtime') WHERE id=?
       `).run(media_url, cover_url, row.id);
@@ -336,6 +367,7 @@ if (!fs.existsSync(path.join(ASSETS, 'music/mp3/intro.mp3'))) {
 }
 ensureUploadsDir();
 ensureDir(uploadsRoot);
+console.log(`上传目录: ${uploadsDir}`);
 
 syncMoments();
 syncMusic();

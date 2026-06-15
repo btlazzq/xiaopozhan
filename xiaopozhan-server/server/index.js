@@ -22,8 +22,15 @@ const { uploadsDir } = require('./paths');
 app.use('/uploads', (req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Accept-Ranges', 'bytes');
   next();
-}, express.static(uploadsDir));
+}, express.static(uploadsDir, {
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('.mp3')) res.setHeader('Content-Type', 'audio/mpeg');
+    else if (filePath.endsWith('.wav')) res.setHeader('Content-Type', 'audio/wav');
+    else if (filePath.endsWith('.mp4')) res.setHeader('Content-Type', 'video/mp4');
+  }
+}));
 app.use('/admin', express.static(path.join(__dirname, '../admin')));
 
 app.use('/api', publicRoutes);
