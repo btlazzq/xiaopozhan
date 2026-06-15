@@ -1,0 +1,18 @@
+.DS_Store
+node_modules
+**/node_modules
+
+# 备份目录不提交
+xiaopozhan copy/
+xiaopozhan-server copy/
+
+# 前端构建产物由 Cloudflare 在线构建
+xiaopozhan/dist/
+
+# 教程素材体积大，部署不需要
+div小网站素材/
+div视频教程/
+小破站需要用到的软件工具/
+教程文档/
+认识项目目录内容.png
+说明书.txt

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Permanent+Marker&display=swap" rel="stylesheet">
+    <title>
+        <%= htmlWebpackPlugin.options.title %>
+    </title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+</head>
+
+<body class="" style="background: #000000">
+    <noscript>
+        <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled.
+                Please enable it to continue.</strong>
+    </noscript>
+    <div id="app"></div>
+</body>
+
+</html>
+<script>
+    if (('standalone' in window.navigator) && window.navigator.standalone) {
+        var noddy, remotes = false;
+        document.addEventListener('click', function (event) {
+            noddy = event.target;
+            while (noddy.nodeName !== 'A' && noddy.nodeName !== 'HTML') noddy = noddy.parentNode;
+            if ('href' in noddy && noddy.href.indexOf('http') !== -1 && (noddy.href.indexOf(document.location.host) !== -1 || remotes)) {
+                event.preventDefault();
+                document.location.href = noddy.href;
+            }
+        }, false);
+    }
+</script>
+<style>
+    @media (min-width:100px) and (max-width: 151px) {
+        html {
+            font-size: 34.8837px;
+        }
+
+    }
+
+    @media(min-width:151px) and (max-width: 155px) {
+        html {
+            font-size: 36.2791px;
+        }
+
+    }
+
+    @media(min-width:155px) and (max-width: 160px) {
+        html {
+            font-size: 37.2093px;
+        }
+
+    }
+
+    @media(min-width:160px) and (max-width: 165px) {
+        html {
+            font-size: 38.2093px;
+        }
+    }
+
+    @media(min-width:165px) and (max-width: 170px) {
+        html {
+            font-size: 39.2093px;
+        }
+    }
+
+    @media(min-width:170px) and (max-width: 175px) {
+        html {
+            font-size: 40.2093px;
+        }
+    }
+
+    @media(min-width:175px) and (max-width: 180px) {
+        html {
+            font-size: 41.2093px;
+        }
+    }
+
+    @media(min-width:180px) and (max-width: 185px) {
+        html {
+            font-size: 42.2093px;
+        }
+    }
+
+    @media(min-width:185px) and (max-width: 190px) {
+        html {
+            font-size: 43.2093px;
+        }
+    }
+
+    @media(min-width:190px) and (max-width: 195px) {
+        html {
+            font-size: 44.2093px;
+        }
+    }
+
+    @media(min-width:195px) and (max-width: 210px) {
+        html {
+            font-size: 45.2093px;
+        }
+    }
+
+    @media(min-width:210px) and (max-width: 215px) {
+        html {
+            font-size: 46.2693px;
+        }
+    }
+
+    @media(min-width:215px) and (max-width: 220px) {
+        html {
+            font-size: 47.5093px;
+        }
+    }
+
+    @media(min-width:220px) and (max-width: 235px) {
+        html {
+            font-size: 52.2093px;
+        }
+    }
+
+    @media(min-width:235px) and (max-width: 240px) {
+        html {
+            font-size: 54.2093px;
+        }
+    }
+
+    @media(min-width:240px) and (max-width: 245px) {
+        html {
+            font-size: 55.2093px;
+        }
+    }
+
+    @media (min-width: 245px) and (max-width: 250px) {
+        html {
+            font-size: 56.2093px;
+        }
+    }
+
+    @media (min-width: 250px) and (max-width: 255px) {
+        html {
+            font-size: 57.2093px;
+        }
+    }
+
+    @media (min-width: 255px) and (max-width: 260px) {
+        html {
+            font-size: 58.2693px;
+        }
+    }
+
+    @media (min-width: 260px) and (max-width: 265px) {
+        html {
+            font-size: 59.4093px;
+        }
+    }
+
+    @media (min-width: 265px) and (max-width: 270px) {
+        html {
+            font-size: 60.4093px;
+        }
+    }
+
+    @media (min-width: 270px) and (max-width: 275px) {
+        html {
+            font-size: 61.7093px;
+        }
+    }
+
+    @media (min-width: 275px) and (max-width: 280px) {
+        html {
+            font-size: 62.6093px;
+        }
+    }
+
+    @media (min-width: 280px) and (max-width: 285px) {
+        html {
+            font-size: 64.2093px;
+        }
+    }
+
+    @media (min-width: 285px) and (max-width: 290px) {
+        html {
+            font-size: 66.2093px;
+        }
+    }
+
+    @media (min-width: 290px) and (max-width: 295px) {
+        html {
+            font-size: 67.2093px;
+        }
+    }
+
+    @media (min-width: 295px) and (max-width: 300px) {
+        html {
+            font-size: 69.2093px;
+        }
+    }
+
+    @media (min-width: 300px) and (max-width: 305px) {
+        html {
+            font-size: 70.2093px;
+        }
+    }
+
+    @media (min-width: 305px) and (max-width: 310px) {
+        html {
+            font-size: 72.2093px;
+        }
+    }
+
+    @media (min-width: 310px) and (max-width: 315px) {
+        html {
+            font-size: 74.2093px;
+        }
+    }
+
+    @media (min-width: 315px) and (max-width: 320px) {
+        html {
+            font-size: 74.2493px;
+        }
+    }
+
+    @media (min-width: 320px) and (max-width: 325px) {
+        html {
+            font-size: 75.7093px;
+        }
+    }
+
+    @media (min-width: 325px) and (max-width: 330px) {
+        html {
+            font-size: 76.2093px;
+        }
+    }
+
+    @media (min-width: 330px) and (max-width: 335px) {
+        html {
+            font-size: 77.7093px;
+        }
+    }
+
+    @media (min-width: 335px) and (max-width: 340px) {
+        html {
+            font-size: 77.993px;
+        }
+    }
+
+    @media (min-width: 340px) and (max-width: 345px) {
+        html {
+            font-size: 77.999px;
+        }
+    }
+
+    @media (min-width: 345px) and (max-width: 350px) {
+        html {
+            font-size: 79.9999px;
+        }
+    }
+
+    @media (min-width: 350px) and (max-width: 355px) {
+        html {
+            font-size: 80.7093px;
+        }
+    }
+
+    @media (min-width: 355px) and (max-width: 360px) {
+        html {
+            font-size: 82.2093px;
+        }
+    }
+
+    @media (min-width: 360px) and (max-width: 365px) {
+        html {
+            font-size: 83.7093px;
+        }
+    }
+
+    @media (min-width: 365px) and (max-width: 370px) {
+        html {
+            font-size: 85.2093px;
+        }
+    }
+
+    @media (min-width: 370px) and (max-width: 375px) {
+        html {
+            font-size: 86.7093px;
+        }
+    }
+
+    @media (min-width: 375px) and (max-width: 380px) {
+        html {
+            font-size: 88.2093px;
+        }
+    }
+
+    @media (min-width: 380px) and (max-width: 385px) {
+        html {
+            font-size: 89.7093px;
+        }
+    }
+
+    @media (min-width: 385px) and (max-width: 390px) {
+        html {
+            font-size: 91.2093px;
+        }
+    }
+
+    @media (min-width: 390px) and (max-width: 395px) {
+        html {
+            font-size: 92.7093px;
+        }
+    }
+
+    @media (min-width: 395px) and (max-width: 400px) {
+        html {
+            font-size: 94.2093px;
+        }
+    }
+
+    @media (min-width: 400px) and (max-width: 405px) {
+        html {
+            font-size: 95.7093px;
+        }
+    }
+
+    @media (min-width: 405px) and (max-width: 410px) {
+        html {
+            font-size: 97.2093px;
+        }
+    }
+
+    @media (min-width: 410px) and (max-width: 415px) {
+        html {
+            font-size: 98.7093px;
+        }
+    }
+
+    @media (min-width: 415px) and (max-width: 420px) {
+        html {
+            font-size: 98.8093px;
+        }
+    }
+
+    @media (min-width: 420px) and (max-width: 425px) {
+        html {
+            font-size: 99.7093px;
+        }
+    }
+
+
+    @media screen and (min-width: 430px) {
+        html {
+            font-size: 100px !important;
+        }
+
+    }
+</style>

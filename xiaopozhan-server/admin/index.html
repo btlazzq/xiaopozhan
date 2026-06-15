@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>小破站管理端</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="login-view" class="login-view hidden">
+    <div class="login-card">
+      <h1>小破站管理端</h1>
+      <p class="hint">留言管理 · 明信片管理</p>
+      <label>用户名</label>
+      <input id="login-username" type="text" value="admin" />
+      <label>密码</label>
+      <input id="login-password" type="password" value="admin123" />
+      <p id="login-error" class="error hidden"></p>
+      <button id="login-btn" class="btn primary full">登录</button>
+    </div>
+  </div>
+
+  <div id="app-view" class="app-view hidden">
+    <aside class="sidebar">
+      <div class="brand">小破站</div>
+      <nav>
+        <button class="nav-btn active" data-tab="dashboard">概览</button>
+        <button class="nav-btn" data-tab="messages">留言管理</button>
+        <button class="nav-btn" data-tab="tarot">塔罗占卜</button>
+        <button class="nav-btn" data-tab="moments">瞬间 /liberty</button>
+        <button class="nav-btn" data-tab="music-admin">音乐 /music</button>
+        <button class="nav-btn" data-tab="postcards">明信片作品</button>
+        <button class="nav-btn" data-tab="settings">系统设置</button>
+      </nav>
+      <button id="logout-btn" class="nav-btn logout">退出登录</button>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <h2 id="page-title">概览</h2>
+        <span id="admin-name" class="admin-name"></span>
+      </header>
+
+      <section id="tab-dashboard" class="tab-panel">
+        <div class="stats-grid" id="stats-grid"></div>
+        <div class="card">
+          <h3>最近留言</h3>
+          <table class="table">
+            <thead>
+              <tr><th>内容</th><th>IP</th><th>状态</th><th>时间</th></tr>
+            </thead>
+            <tbody id="recent-messages"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="tab-messages" class="tab-panel hidden">
+        <p class="page-hint">前台留言<strong>无需审核</strong>，提交后直接进入签筒。此处可查看 IP、内容与时间，并删除不当留言。</p>
+        <div class="toolbar">
+          <select id="msg-filter">
+            <option value="">全部（不含已删）</option>
+            <option value="approved">已公开</option>
+            <option value="hidden">敏感词隐藏</option>
+          </select>
+          <input id="msg-keyword" type="text" placeholder="搜索关键词" />
+          <button class="btn" id="msg-search">搜索</button>
+        </div>
+        <div class="card">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>内容</th>
+                <th>IP</th>
+                <th>时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="messages-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="tab-tarot" class="tab-panel hidden">
+        <p class="page-hint">前台 <strong>/commentWall</strong> 韦特塔罗三张牌阵：记录用户<strong>问题、IP、抽牌结果</strong>，可搜索与删除。</p>
+        <div class="toolbar">
+          <input id="tarot-keyword" type="text" placeholder="搜索问题 / IP / 牌名" />
+          <button class="btn" id="tarot-search">搜索</button>
+        </div>
+        <div class="card">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>问题</th>
+                <th>三张牌</th>
+                <th>IP</th>
+                <th>时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="tarot-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="tab-moments" class="tab-panel hidden">
+        <p class="page-hint">管理前台 <strong>/liberty</strong> 瞬间页：正文 + 图片/视频附件，状态选「已发布」后前台可见。</p>
+        <div class="toolbar">
+          <select id="moment-status-filter">
+            <option value="">全部状态</option>
+            <option value="published">已发布</option>
+            <option value="draft">草稿</option>
+          </select>
+          <button class="btn primary" id="moment-add-btn">新增瞬间</button>
+          <button class="btn" id="moment-refresh">刷新</button>
+        </div>
+        <div class="card">
+          <table class="table">
+            <thead>
+              <tr><th>ID</th><th>正文</th><th>发布时间</th><th>状态</th><th>排序</th><th>操作</th></tr>
+            </thead>
+            <tbody id="moments-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="tab-music-admin" class="tab-panel hidden">
+        <p class="page-hint">管理前台 <strong>/music</strong> 书架：可为每条音乐选择<strong>书脊材质</strong>、自定义竖排书名；<strong>shelf_slot</strong> 控制从左到右位置；<strong>no</strong> 为播放 ID（?no=）。</p>
+        <div class="toolbar">
+          <button class="btn primary" id="music-add-btn">新增音乐</button>
+          <button class="btn" id="music-refresh">刷新音乐</button>
+        </div>
+        <div class="card">
+          <h3 class="section-h3">音乐列表</h3>
+          <table class="table">
+            <thead>
+              <tr><th>ID</th><th>标题</th><th>书脊名</th><th>材质</th><th>no</th><th>位置</th><th>状态</th><th>操作</th></tr>
+            </thead>
+            <tbody id="music-body"></tbody>
+          </table>
+        </div>
+        <div class="toolbar" style="margin-top:16px">
+          <button class="btn primary" id="video-add-btn">新增视频</button>
+          <button class="btn" id="video-refresh">刷新视频</button>
+        </div>
+        <div class="card">
+          <h3 class="section-h3">视频列表</h3>
+          <table class="table">
+            <thead>
+              <tr><th>ID</th><th>标题</th><th>书脊名</th><th>材质</th><th>no</th><th>位置</th><th>状态</th><th>操作</th></tr>
+            </thead>
+            <tbody id="video-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="tab-postcards" class="tab-panel hidden">
+        <div class="toolbar">
+          <select id="activity-select"></select>
+          <button class="btn" id="load-works">刷新作品</button>
+        </div>
+        <div class="card">
+          <div id="works-grid" class="works-grid"></div>
+        </div>
+      </section>
+
+      <section id="tab-settings" class="tab-panel hidden">
+        <div class="card settings-card">
+          <h3>站点设置</h3>
+          <label>站点名称</label>
+          <input id="set-title" type="text" />
+          <label class="checkbox-row">
+            <input id="set-message" type="checkbox" />
+            开启留言功能
+          </label>
+          <label class="checkbox-row">
+            <input id="set-activity" type="checkbox" />
+            开启明信片活动
+          </label>
+          <button class="btn primary" id="save-settings">保存设置</button>
+          <p id="settings-msg" class="hint"></p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="content-modal" class="modal hidden">
+    <div class="modal-box">
+      <h3 id="content-modal-title">编辑内容</h3>
+      <input type="hidden" id="content-id" />
+      <input type="hidden" id="content-type" />
+      <p id="content-type-label" class="hint"></p>
+      <div id="field-no" class="field-row">
+        <label>序号 no（播放 ID，对应 ?no=，可与书架位置不同）</label>
+        <input id="content-no" type="number" min="1" />
+      </div>
+      <div id="field-shelf-slot" class="field-row">
+        <label>书架位置 shelf_slot（1 为最左，留空则自动排序）</label>
+        <input id="content-shelf-slot" type="number" min="1" placeholder="如 intro2 填 2" />
+      </div>
+      <div id="field-spine" class="field-row hidden">
+        <label>书脊材质（复古磁带外观）</label>
+        <select id="content-spine-material"></select>
+        <p id="content-spine-desc" class="hint"></p>
+      </div>
+      <div id="field-spine-label" class="field-row hidden">
+        <label>书脊显示名（竖排文字，留空则用标题）</label>
+        <input id="content-spine-label" type="text" placeholder="如 日记 / 7、INTRO2" />
+      </div>
+      <div id="field-spine-colors" class="field-row hidden">
+        <label>拼色左 / 右（仅「拼色·自定义」等，填 #hex）</label>
+        <div class="upload-row">
+          <input id="content-spine-color-left" type="text" placeholder="#8ab4d4" />
+          <input id="content-spine-color-right" type="text" placeholder="#e8dfd0" />
+        </div>
+      </div>
+      <div id="field-title" class="field-row">
+        <label>标题</label>
+        <input id="content-title" type="text" />
+      </div>
+      <div id="field-content" class="field-row">
+        <label>正文</label>
+        <textarea id="content-text" rows="3"></textarea>
+      </div>
+      <div id="field-cover" class="field-row">
+        <label>封面 URL</label>
+        <div class="upload-row">
+          <input id="content-cover" type="text" />
+          <input type="file" id="upload-cover" accept="image/*" />
+          <button class="btn sm" onclick="uploadFor('cover')">上传封面</button>
+        </div>
+      </div>
+      <div id="field-media" class="field-row">
+        <label>媒体 URL（音频/视频文件）</label>
+        <div class="upload-row">
+          <input id="content-media" type="text" />
+          <input type="file" id="upload-media" accept="audio/*,video/*" />
+          <button class="btn sm" onclick="uploadFor('media')">上传媒体</button>
+        </div>
+      </div>
+      <div id="field-media-json" class="field-row hidden">
+        <label>瞬间附件 JSON（fileList）</label>
+        <textarea id="content-media-json" rows="5" placeholder='[{"fileUrl":"/uploads/xx.mp4","fileType":"video","coverUrl":"/uploads/cover.png"}]'></textarea>
+        <p class="hint">fileType: image 或 video；可先上传文件后把 URL 填入 JSON</p>
+        <div class="upload-row">
+          <input type="file" id="upload-moment-file" />
+          <button class="btn sm" onclick="uploadMomentFile()">上传并追加到 JSON</button>
+        </div>
+      </div>
+      <label>发布时间</label>
+      <input id="content-publish-time" type="text" placeholder="2026-06-12 12:00:00" />
+      <label>排序（越大越靠前）</label>
+      <input id="content-sort" type="number" value="0" />
+      <label>状态</label>
+      <select id="content-status">
+        <option value="published">已发布</option>
+        <option value="draft">草稿</option>
+      </select>
+      <p id="content-modal-msg" class="hint"></p>
+      <div class="modal-actions">
+        <button class="btn" id="content-modal-cancel">取消</button>
+        <button class="btn primary" id="content-modal-save">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
