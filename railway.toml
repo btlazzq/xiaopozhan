@@ -1,9 +1,0 @@
-# 仓库根目录部署（Railway Root Directory 留空）
-[build]
-builder = "dockerfile"
-dockerfilePath = "Dockerfile"
-
-[deploy]
-restartPolicyType = "on_failure"
-healthcheckPath = "/api/settings/public"
-healthcheckTimeout = 300
