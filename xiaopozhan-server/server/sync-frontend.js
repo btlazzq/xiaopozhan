@@ -360,7 +360,6 @@ console.log('正在同步前台默认数据到后台...');
 console.log(`资源目录: ${ASSETS}`);
 if (!fs.existsSync(path.join(ASSETS, 'music/mp3/intro.mp3'))) {
   console.error('⚠ 资源目录无效，无法复制 mp3/图片');
-  console.error('  → Railway Variables 里删除 ASSETS_DIR（若存在）');
   console.error('  → 确认构建日志有 seed-assets OK');
 } else {
   console.log('✓ intro.mp3 可读');
@@ -369,10 +368,14 @@ ensureUploadsDir();
 ensureDir(uploadsRoot);
 console.log(`上传目录: ${uploadsDir}`);
 
-syncMoments();
-syncMusic();
-syncVideo();
-syncCommentWallMessages();
+try {
+  syncMoments();
+  syncMusic();
+  syncVideo();
+  syncCommentWallMessages();
+} catch (e) {
+  console.error('同步过程出错（服务仍会启动）:', e);
+}
 
 console.log('\n同步完成！');
 console.log('前台刷新 /liberty、/music、/commentWall 即可看到数据。');

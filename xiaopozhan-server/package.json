@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "start": "node server/index.js",
-    "start:deploy": "node server/seed.js && node server/sync-frontend.js && node server/index.js",
+    "start:deploy": "node server/seed.js && node server/bootstrap-uploads.js && node server/sync-frontend.js && node server/index.js",
     "start:deploy:force": "node server/seed.js && node server/sync-frontend.js --force && node server/index.js",
     "restart": "lsof -ti:3002 | xargs kill -9 2>/dev/null; sleep 1; node server/index.js",
     "dev": "node server/index.js",
