@@ -8,6 +8,11 @@ const { getPublicOrigin } = require('./publicUrl');
 const app = express();
 const PORT = process.env.PORT || 3002;
 
+const dbModule = require('./db');
+if (typeof dbModule.ensureAssetsTable === 'function') {
+  dbModule.ensureAssetsTable();
+}
+
 app.set('trust proxy', true);
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));

@@ -50,7 +50,7 @@ router.post('/upload', authMiddleware, (req, res) => {
       return res.status(400).json({ error: msg });
     }
     try {
-      ensureAssetsTable();
+      if (typeof ensureAssetsTable === 'function') ensureAssetsTable();
       ensureUploadsDir();
       if (!req.file) return res.status(400).json({ error: '未上传文件' });
       const type = req.body.type || 'file';

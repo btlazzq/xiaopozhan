@@ -5,7 +5,9 @@
  */
 const fs = require('fs');
 const path = require('path');
-const db = require('./db');
+const dbModule = require('./db');
+const db = dbModule;
+const { ensureAssetsTable } = dbModule;
 const { uploadsDir, ensureUploadsDir } = require('./paths');
 
 const force = process.argv.includes('--force') || process.env.SYNC_FORCE === '1';
@@ -44,6 +46,15 @@ function resolveAssetsDir() {
 }
 
 const ASSETS = resolveAssetsDir();
+
+function ensureAssetsTableSafe() {
+  try {
+    ensureAssetsTable();
+  } catch (e) {
+    console.error('ensureAssetsTable failed:', e.message);
+  }
+}
+ensureAssetsTableSafe();
 const UPLOAD_SUBDIR = 'frontend-sync';
 const uploadsRoot = path.join(uploadsDir, UPLOAD_SUBDIR);
 
