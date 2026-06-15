@@ -73,7 +73,7 @@ npm run build         # 产物在 dist/
 | 服务 | Root Directory | 说明 |
 |------|----------------|------|
 | Cloudflare Pages | `xiaopozhan-dev` | Build：`npm install && npm run build`，输出 `dist` |
-| Railway | `xiaopozhan-server` | 挂 **1 个** Volume 到 `/app/persist`，并设 `PERSIST_DIR=/app/persist` |
+| Railway | **仓库根目录**（Root Directory 留空） | 挂 1 个 Volume 到 `/app/persist`，设 `PERSIST_DIR` 与 `PUBLIC_URL` |
 
 前端生产环境变量示例：
 

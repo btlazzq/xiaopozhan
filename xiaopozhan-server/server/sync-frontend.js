@@ -9,7 +9,22 @@ const db = require('./db');
 const { uploadsDir, ensureUploadsDir } = require('./paths');
 
 const force = process.argv.includes('--force') || process.env.SYNC_FORCE === '1';
-const ASSETS = path.resolve(__dirname, '../../xiaopozhan-dev/src/assets');
+
+function resolveAssetsDir() {
+  if (process.env.ASSETS_DIR && fs.existsSync(process.env.ASSETS_DIR)) {
+    return process.env.ASSETS_DIR;
+  }
+  const candidates = [
+    path.resolve(__dirname, '../../xiaopozhan-dev/src/assets'),
+    path.resolve(__dirname, '../seed-assets'),
+  ];
+  for (const dir of candidates) {
+    if (fs.existsSync(dir)) return dir;
+  }
+  return candidates[0];
+}
+
+const ASSETS = resolveAssetsDir();
 const UPLOAD_SUBDIR = 'frontend-sync';
 const uploadsRoot = path.join(uploadsDir, UPLOAD_SUBDIR);
 
@@ -170,8 +185,8 @@ function syncMusic() {
         repaired++;
         continue;
       }
-      const needMedia = !row.media_url;
-      const needCover = !row.cover_url;
+      const needMedia = !row.media_url || !String(row.media_url).trim();
+      const needCover = !row.cover_url || !String(row.cover_url).trim();
       if (!needMedia && !needCover) continue;
       const media_url = needMedia ? copyAsset(t.mp3) : row.media_url;
       const cover_url = needCover ? copyAsset(t.cover) : row.cover_url;
@@ -283,7 +298,9 @@ function syncCommentWallMessages() {
 console.log('正在同步前台默认数据到后台...');
 console.log(`资源目录: ${ASSETS}`);
 if (!fs.existsSync(ASSETS)) {
-  console.error('⚠ 找不到前端资源目录，音乐/瞬间将无法同步。请确认仓库包含 xiaopozhan-dev/src/assets');
+  console.error('⚠ 找不到前端资源目录:', ASSETS);
+  console.error('  Railway 请将 Root Directory 留空，从仓库根目录部署');
+  console.error('  或设置 ASSETS_DIR 指向 assets 目录');
 } else {
   console.log('✓ 前端资源目录存在');
 }
