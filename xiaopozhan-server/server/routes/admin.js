@@ -5,7 +5,9 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
-const db = require('../db');
+const dbModule = require('../db');
+const db = dbModule;
+const { ensureAssetsTable } = dbModule;
 const { uploadsDir, ensureUploadsDir } = require('../paths');
 const { SPINE_MATERIAL_LIST } = require('../spineMaterials');
 const { authMiddleware, JWT_SECRET } = require('../middleware/auth');
@@ -48,6 +50,7 @@ router.post('/upload', authMiddleware, (req, res) => {
       return res.status(400).json({ error: msg });
     }
     try {
+      ensureAssetsTable();
       ensureUploadsDir();
       if (!req.file) return res.status(400).json({ error: '未上传文件' });
       const type = req.body.type || 'file';

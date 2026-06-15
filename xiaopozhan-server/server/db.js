@@ -177,3 +177,4 @@ function ensureAssetsTable() {
 initDb();
 
 module.exports = db;
+module.exports.ensureAssetsTable = ensureAssetsTable;

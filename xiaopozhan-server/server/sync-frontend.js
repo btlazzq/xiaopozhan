@@ -11,28 +11,35 @@ const { uploadsDir, ensureUploadsDir } = require('./paths');
 const force = process.argv.includes('--force') || process.env.SYNC_FORCE === '1';
 
 function resolveAssetsDir() {
-  if (process.env.ASSETS_DIR) {
-    const probe = path.join(process.env.ASSETS_DIR, 'music/mp3/intro.mp3');
-    if (fs.existsSync(probe)) return process.env.ASSETS_DIR;
-    console.warn('  ASSETS_DIR 已设置但缺少 intro.mp3:', process.env.ASSETS_DIR);
-  }
   const candidates = [
     path.resolve(__dirname, '../seed-assets'),
     path.resolve(__dirname, '../../xiaopozhan-dev/src/assets'),
   ];
+
+  if (process.env.ASSETS_DIR) {
+    candidates.unshift(process.env.ASSETS_DIR);
+    console.warn('  检测到 ASSETS_DIR 环境变量，若同步失败请删除该变量');
+  }
+
   for (const dir of candidates) {
     const probe = path.join(dir, 'music/mp3/intro.mp3');
     if (fs.existsSync(probe)) {
       try {
         const mp3Count = fs.readdirSync(path.join(dir, 'music/mp3')).length;
-        console.log(`  使用资源目录: ${dir}（mp3 ${mp3Count} 个）`);
+        console.log(`  ✓ 使用资源目录: ${dir}（mp3 ${mp3Count} 个）`);
       } catch {
-        console.log(`  使用资源目录: ${dir}`);
+        console.log(`  ✓ 使用资源目录: ${dir}`);
       }
       return dir;
     }
   }
-  console.error('  ✗ 未找到有效资源目录，候选:', candidates.join(' | '));
+
+  console.error('  ✗ 未找到有效资源目录！');
+  console.error('    请删除 Railway 中的 ASSETS_DIR 变量');
+  console.error('    并确认 /app/seed-assets/music/mp3/intro.mp3 存在');
+  for (const dir of candidates) {
+    console.error(`    - ${dir} ${fs.existsSync(dir) ? '(目录存在但无 intro.mp3)' : '(不存在)'}`);
+  }
   return candidates[0];
 }
 
@@ -309,12 +316,12 @@ function syncCommentWallMessages() {
 
 console.log('正在同步前台默认数据到后台...');
 console.log(`资源目录: ${ASSETS}`);
-if (!fs.existsSync(ASSETS)) {
-  console.error('⚠ 找不到前端资源目录:', ASSETS);
-  console.error('  Railway 请将 Root Directory 留空，从仓库根目录部署');
-  console.error('  或设置 ASSETS_DIR 指向 assets 目录');
+if (!fs.existsSync(path.join(ASSETS, 'music/mp3/intro.mp3'))) {
+  console.error('⚠ 资源目录无效，无法复制 mp3/图片');
+  console.error('  → Railway Variables 里删除 ASSETS_DIR（若存在）');
+  console.error('  → 确认构建日志有 seed-assets OK');
 } else {
-  console.log('✓ 前端资源目录存在');
+  console.log('✓ intro.mp3 可读');
 }
 ensureUploadsDir();
 ensureDir(uploadsRoot);
