@@ -28,4 +28,13 @@ app.listen(PORT, () => {
   console.log(`  API:  http://localhost:${PORT}/api`);
   console.log(`  管理端: http://localhost:${PORT}/admin`);
   console.log(`  默认账号: admin / admin123\n`);
+}).on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`\n  端口 ${PORT} 已被占用，后端没有成功启动。`);
+    console.error(`  请先执行: npm run restart`);
+    console.error(`  或手动: lsof -ti:${PORT} | xargs kill -9\n`);
+  } else {
+    console.error(err);
+  }
+  process.exit(1);
 });

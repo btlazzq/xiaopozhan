@@ -8,7 +8,7 @@ const path = require('path');
 const db = require('./db');
 
 const force = process.argv.includes('--force');
-const ASSETS = path.resolve(__dirname, '../../xiaopozhan/src/assets');
+const ASSETS = path.resolve(__dirname, '../../xiaopozhan-dev/src/assets');
 const UPLOAD_SUBDIR = 'frontend-sync';
 const uploadsRoot = path.join(__dirname, '../uploads', UPLOAD_SUBDIR);
 

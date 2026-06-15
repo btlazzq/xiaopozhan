@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server/index.js",
     "start:deploy": "node server/seed.js && node server/sync-frontend.js && node server/index.js",
+    "restart": "lsof -ti:3002 | xargs kill -9 2>/dev/null; sleep 1; node server/index.js",
     "dev": "node server/index.js",
     "seed": "node server/seed.js",
     "sync": "node server/sync-frontend.js",
