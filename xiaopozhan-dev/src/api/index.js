@@ -2,6 +2,13 @@ import axios from 'axios';
 
 const BASE = process.env.VUE_APP_BASE_API || '/api';
 
+function getFileOrigin() {
+  const fileBase = process.env.VUE_APP_FILE_BASE;
+  if (fileBase) return fileBase.replace(/\/$/, '');
+  if (BASE.startsWith('http')) return BASE.replace(/\/api$/, '');
+  return '';
+}
+
 const http = axios.create({
   baseURL: BASE,
   timeout: 30000
@@ -66,8 +73,8 @@ export function resolveMediaUrl(url) {
   if (!url) return null;
   if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')) return url;
   if (url.startsWith('/uploads')) {
-    const apiBase = BASE.replace(/\/api$/, '');
-    return `${apiBase}${url}`;
+    const origin = getFileOrigin();
+    return origin ? `${origin}${url}` : url;
   }
   return url;
 }

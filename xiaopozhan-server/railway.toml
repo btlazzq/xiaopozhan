@@ -4,3 +4,4 @@ builder = "nixpacks"
 [deploy]
 startCommand = "npm run start:deploy"
 restartPolicyType = "on_failure"
+# 首次部署数据为空时，可在 Railway Variables 设 SYNC_FORCE=1 触发一次强制同步

@@ -3,11 +3,12 @@ const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../db');
+const { uploadsDir, ensureUploadsDir } = require('../paths');
+const { absolutizeUrl, absolutizeFileList } = require('../publicUrl');
 
 const router = express.Router();
 
-const uploadsDir = path.join(__dirname, '../../uploads');
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+ensureUploadsDir();
 
 function getSettings() {
   return db.prepare('SELECT * FROM system_settings WHERE id = 1').get();
@@ -181,7 +182,7 @@ router.get('/moments', (req, res) => {
     id: row.id,
     content: row.content || '',
     createTime: row.publish_time || row.created_at,
-    fileList: parseMediaJson(row.media_json)
+    fileList: absolutizeFileList(parseMediaJson(row.media_json))
   }));
   res.json({ items });
 });
@@ -192,7 +193,11 @@ router.get('/music', (req, res) => {
       spine_material, spine_label, spine_color_left, spine_color_right, publish_time
     FROM contents WHERE type = 'music' AND status = 'published'
     ORDER BY CASE WHEN shelf_slot IS NULL THEN 1 ELSE 0 END, shelf_slot ASC, sort DESC, no ASC, id ASC
-  `).all();
+  `).all().map((row) => ({
+    ...row,
+    cover_url: absolutizeUrl(row.cover_url),
+    media_url: absolutizeUrl(row.media_url)
+  }));
   res.json({ items });
 });
 
@@ -202,7 +207,11 @@ router.get('/music/:no', (req, res) => {
     WHERE type = 'music' AND status = 'published' AND no = ?
   `).get(req.params.no);
   if (!item) return res.status(404).json({ error: '音乐不存在' });
-  res.json(item);
+  res.json({
+    ...item,
+    cover_url: absolutizeUrl(item.cover_url),
+    media_url: absolutizeUrl(item.media_url)
+  });
 });
 
 router.get('/video', (req, res) => {
@@ -211,7 +220,11 @@ router.get('/video', (req, res) => {
       spine_material, spine_label, spine_color_left, spine_color_right, publish_time
     FROM contents WHERE type = 'video' AND status = 'published'
     ORDER BY CASE WHEN shelf_slot IS NULL THEN 1 ELSE 0 END, shelf_slot ASC, sort DESC, no ASC, id ASC
-  `).all();
+  `).all().map((row) => ({
+    ...row,
+    cover_url: absolutizeUrl(row.cover_url),
+    media_url: absolutizeUrl(row.media_url)
+  }));
   res.json({ items });
 });
 
@@ -221,7 +234,11 @@ router.get('/video/:no', (req, res) => {
     WHERE type = 'video' AND status = 'published' AND no = ?
   `).get(req.params.no);
   if (!item) return res.status(404).json({ error: '视频不存在' });
-  res.json(item);
+  res.json({
+    ...item,
+    cover_url: absolutizeUrl(item.cover_url),
+    media_url: absolutizeUrl(item.media_url)
+  });
 });
 
 router.get('/settings/public', (req, res) => {

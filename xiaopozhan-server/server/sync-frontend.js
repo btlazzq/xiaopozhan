@@ -6,11 +6,12 @@
 const fs = require('fs');
 const path = require('path');
 const db = require('./db');
+const { uploadsDir, ensureUploadsDir } = require('./paths');
 
-const force = process.argv.includes('--force');
+const force = process.argv.includes('--force') || process.env.SYNC_FORCE === '1';
 const ASSETS = path.resolve(__dirname, '../../xiaopozhan-dev/src/assets');
 const UPLOAD_SUBDIR = 'frontend-sync';
-const uploadsRoot = path.join(__dirname, '../uploads', UPLOAD_SUBDIR);
+const uploadsRoot = path.join(uploadsDir, UPLOAD_SUBDIR);
 
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -96,7 +97,25 @@ function syncMoments() {
 
   const count = db.prepare("SELECT COUNT(*) as c FROM contents WHERE type='moment'").get().c;
   if (count > 0 && !force) {
-    console.log('  数据库已有瞬间数据，使用 --force 可覆盖');
+    const rows = db.prepare(
+      "SELECT id, content, media_json FROM contents WHERE type='moment'"
+    ).all();
+    let repaired = 0;
+    for (const m of moments) {
+      if (!m.media_json || m.media_json === '[]') continue;
+      const row = rows.find((r) => r.content === m.content);
+      if (!row) continue;
+      let list = [];
+      try { list = JSON.parse(row.media_json || '[]'); } catch { list = []; }
+      const broken = !list.length || list.some((f) => !f.fileUrl);
+      if (!broken) continue;
+      db.prepare(`
+        UPDATE contents SET media_json=?, updated_at=datetime('now','localtime') WHERE id=?
+      `).run(m.media_json, row.id);
+      console.log(`  ✓ 补全瞬间: ${m.content}`);
+      repaired++;
+    }
+    console.log(repaired ? `  已补全 ${repaired} 条瞬间` : '  瞬间数据完整，跳过');
     return;
   }
   if (force) {
@@ -130,7 +149,42 @@ function syncMusic() {
 
   const count = db.prepare("SELECT COUNT(*) as c FROM contents WHERE type='music'").get().c;
   if (count > 0 && !force) {
-    console.log('  数据库已有音乐数据，使用 --force 可覆盖');
+    let repaired = 0;
+    for (const t of tracks) {
+      const row = db.prepare(
+        'SELECT id, media_url, cover_url FROM contents WHERE type = ? AND no = ?'
+      ).get('music', t.no);
+      if (!row) {
+        const media_url = copyAsset(t.mp3);
+        const cover_url = copyAsset(t.cover);
+        upsertContent('music', t.no, {
+          title: t.title,
+          content: null,
+          cover_url,
+          media_url,
+          media_json: null,
+          status: 'published',
+          sort: 100 - t.no,
+          publish_time: '2025-08-09 12:00:00'
+        });
+        repaired++;
+        continue;
+      }
+      const needMedia = !row.media_url;
+      const needCover = !row.cover_url;
+      if (!needMedia && !needCover) continue;
+      const media_url = needMedia ? copyAsset(t.mp3) : row.media_url;
+      const cover_url = needCover ? copyAsset(t.cover) : row.cover_url;
+      if (media_url || cover_url) {
+        db.prepare(`
+          UPDATE contents SET media_url=?, cover_url=?, updated_at=datetime('now','localtime')
+          WHERE id=?
+        `).run(media_url || row.media_url, cover_url || row.cover_url, row.id);
+        console.log(`  ✓ 补全 music no=${t.no}`);
+        repaired++;
+      }
+    }
+    console.log(repaired ? `  已补全 ${repaired} 条音乐` : '  音乐数据完整，跳过');
     return;
   }
   if (force) {
@@ -157,7 +211,19 @@ function syncVideo() {
   console.log('\n【视频 /music 视频区】');
   const count = db.prepare("SELECT COUNT(*) as c FROM contents WHERE type='video'").get().c;
   if (count > 0 && !force) {
-    console.log('  数据库已有视频数据，使用 --force 可覆盖');
+    const row = db.prepare(
+      'SELECT id, media_url, cover_url FROM contents WHERE type = ? AND no = 1'
+    ).get('video');
+    if (row && (!row.media_url || !row.cover_url)) {
+      const media_url = row.media_url || copyAsset('liberty/moment_video/sp1.mp4');
+      const cover_url = row.cover_url || copyAsset('music/mp4/cover/v0531.png');
+      db.prepare(`
+        UPDATE contents SET media_url=?, cover_url=?, updated_at=datetime('now','localtime') WHERE id=?
+      `).run(media_url, cover_url, row.id);
+      console.log('  ✓ 补全视频 no=1');
+    } else {
+      console.log('  视频数据完整，跳过');
+    }
     return;
   }
   if (force) {
@@ -216,6 +282,12 @@ function syncCommentWallMessages() {
 
 console.log('正在同步前台默认数据到后台...');
 console.log(`资源目录: ${ASSETS}`);
+if (!fs.existsSync(ASSETS)) {
+  console.error('⚠ 找不到前端资源目录，音乐/瞬间将无法同步。请确认仓库包含 xiaopozhan-dev/src/assets');
+} else {
+  console.log('✓ 前端资源目录存在');
+}
+ensureUploadsDir();
 ensureDir(uploadsRoot);
 
 syncMoments();

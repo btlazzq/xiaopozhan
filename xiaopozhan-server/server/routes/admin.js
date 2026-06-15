@@ -6,13 +6,13 @@ const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../db');
+const { uploadsDir, ensureUploadsDir } = require('../paths');
 const { SPINE_MATERIAL_LIST } = require('../spineMaterials');
 const { authMiddleware, JWT_SECRET } = require('../middleware/auth');
 
 const router = express.Router();
 
-const uploadsDir = path.join(__dirname, '../../uploads');
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+ensureUploadsDir();
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadsDir),

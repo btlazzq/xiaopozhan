@@ -73,7 +73,7 @@ npm run build         # 产物在 dist/
 | 服务 | Root Directory | 说明 |
 |------|----------------|------|
 | Cloudflare Pages | `xiaopozhan-dev` | Build：`npm install && npm run build`，输出 `dist` |
-| Railway | `xiaopozhan-server` | 挂载 Volume：`/app/data`、`/app/uploads` |
+| Railway | `xiaopozhan-server` | 挂 **1 个** Volume 到 `/app/persist`，并设 `PERSIST_DIR=/app/persist` |
 
 前端生产环境变量示例：
 
@@ -104,7 +104,13 @@ VUE_APP_BASE_API=https://你的后端域名/api
 | `xiaopozhan-server/data/site.db` | SQLite 数据库 |
 | `xiaopozhan-server/uploads/` | 上传的媒体文件 |
 
-部署时请为 `data` 与 `uploads` 配置持久化存储，避免数据丢失。
+部署时请挂 **一个** Volume（Railway 每服务通常只允许一个）：
+
+| Mount Path | 环境变量 |
+|------------|----------|
+| `/app/persist` | `PERSIST_DIR=/app/persist` |
+
+数据库与上传文件会保存在该 Volume 下的 `data/` 与 `uploads/` 子目录。
 
 ## 许可证
 

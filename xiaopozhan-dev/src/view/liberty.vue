@@ -214,6 +214,9 @@ export default {
           ...item,
           fileList: mapMomentFileList(item.fileList)
         }));
+        if (momentList.value.length === 0) {
+          momentList.value = fallbackMoments;
+        }
       } catch {
         momentList.value = fallbackMoments;
       }
