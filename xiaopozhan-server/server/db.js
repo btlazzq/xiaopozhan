@@ -115,6 +115,17 @@ function initDb() {
       ip TEXT PRIMARY KEY,
       last_submit TEXT
     );
+
+    CREATE TABLE IF NOT EXISTS assets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT,
+      filename TEXT,
+      url TEXT,
+      size INTEGER,
+      mime_type TEXT,
+      category TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
   `);
 
   const settings = db.prepare('SELECT id FROM system_settings WHERE id = 1').get();

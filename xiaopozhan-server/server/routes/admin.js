@@ -40,26 +40,39 @@ router.post('/login', (req, res) => {
   res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
 });
 
-router.post('/upload', authMiddleware, upload.single('file'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: '未上传文件' });
-  const type = req.body.type || 'file';
-  const url = `/uploads/${req.file.filename}`;
-  const result = db.prepare(`
-    INSERT INTO assets (type, filename, url, size, mime_type, category)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(
-    type,
-    req.file.originalname,
-    url,
-    req.file.size,
-    req.file.mimetype,
-    req.body.category || ''
-  );
-  res.json({
-    id: result.lastInsertRowid,
-    url,
-    filename: req.file.originalname,
-    size: req.file.size
+router.post('/upload', authMiddleware, (req, res) => {
+  upload.single('file')(req, res, (err) => {
+    if (err) {
+      console.error('upload multer error:', err);
+      const msg = err.code === 'LIMIT_FILE_SIZE' ? '文件超过 100MB 限制' : (err.message || '上传失败');
+      return res.status(400).json({ error: msg });
+    }
+    try {
+      ensureUploadsDir();
+      if (!req.file) return res.status(400).json({ error: '未上传文件' });
+      const type = req.body.type || 'file';
+      const url = `/uploads/${req.file.filename}`;
+      const result = db.prepare(`
+        INSERT INTO assets (type, filename, url, size, mime_type, category)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(
+        type,
+        req.file.originalname,
+        url,
+        req.file.size,
+        req.file.mimetype,
+        req.body.category || ''
+      );
+      res.json({
+        id: result.lastInsertRowid,
+        url,
+        filename: req.file.originalname,
+        size: req.file.size
+      });
+    } catch (e) {
+      console.error('upload error:', e);
+      res.status(500).json({ error: e.message || '服务器错误' });
+    }
   });
 });
 
