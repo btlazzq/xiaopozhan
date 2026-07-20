@@ -10,7 +10,7 @@
   <div id="login-view" class="login-view hidden">
     <div class="login-card">
       <h1>小破站管理端</h1>
-      <p class="hint">留言管理 · 明信片管理</p>
+      <p class="hint">留言 · 内容 · 系统管理</p>
       <label>用户名</label>
       <input id="login-username" type="text" value="admin" />
       <label>密码</label>
@@ -29,7 +29,6 @@
         <button class="nav-btn" data-tab="tarot">塔罗占卜</button>
         <button class="nav-btn" data-tab="moments">瞬间 /liberty</button>
         <button class="nav-btn" data-tab="music-admin">音乐 /music</button>
-        <button class="nav-btn" data-tab="postcards">明信片作品</button>
         <button class="nav-btn" data-tab="settings">系统设置</button>
       </nav>
       <button id="logout-btn" class="nav-btn logout">退出登录</button>
@@ -151,16 +150,6 @@
             </thead>
             <tbody id="video-body"></tbody>
           </table>
-        </div>
-      </section>
-
-      <section id="tab-postcards" class="tab-panel hidden">
-        <div class="toolbar">
-          <select id="activity-select"></select>
-          <button class="btn" id="load-works">刷新作品</button>
-        </div>
-        <div class="card">
-          <div id="works-grid" class="works-grid"></div>
         </div>
       </section>
 

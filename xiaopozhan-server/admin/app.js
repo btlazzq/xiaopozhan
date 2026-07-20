@@ -54,7 +54,6 @@ function switchTab(tab) {
     tarot: '塔罗占卜',
     moments: '瞬间 /liberty',
     'music-admin': '音乐 /music',
-    postcards: '明信片作品',
     settings: '系统设置'
   };
   document.getElementById('page-title').textContent = titles[tab] || tab;
@@ -64,7 +63,6 @@ function switchTab(tab) {
   if (tab === 'tarot') loadTarotReadings();
   if (tab === 'moments') loadMoments();
   if (tab === 'music-admin') loadMusicAdmin();
-  if (tab === 'postcards') loadActivities();
   if (tab === 'settings') loadSettings();
 }
 
@@ -423,44 +421,6 @@ async function deleteTarotReading(id) {
   await loadTarotReadings();
 }
 
-async function loadActivities() {
-  const data = await request('/admin/activities');
-  const select = document.getElementById('activity-select');
-  const items = data.items || [];
-  select.innerHTML = items.map((a) =>
-    `<option value="${a.id}">${escapeHtml(a.name)} (${a.status})</option>`
-  ).join('') || '<option value="">无活动</option>';
-
-  if (items.length) await loadWorks(items[0].id);
-}
-
-async function loadWorks(activityId) {
-  const id = activityId || document.getElementById('activity-select').value;
-  if (!id) return;
-
-  const data = await request(`/admin/activities/${id}/works`);
-  const grid = document.getElementById('works-grid');
-  const works = data.items || [];
-
-  grid.innerHTML = works.map((w) => {
-    const imgSrc = w.image_url
-      ? (w.image_url.startsWith('http') || w.image_url.startsWith('data:')
-        ? w.image_url
-        : w.image_url)
-      : '';
-    return `
-      <div class="work-card">
-        ${imgSrc ? `<img src="${imgSrc}" alt="明信片" />` : '<div class="work-meta">无预览图</div>'}
-        <div class="work-meta">
-          <div>${escapeHtml(w.text || '（无文字）')}</div>
-          <div>${w.created_at}</div>
-          <div>IP: ${w.ip || '-'}</div>
-        </div>
-      </div>
-    `;
-  }).join('') || '<p class="hint">暂无作品</p>';
-}
-
 async function loadSettings() {
   const data = await request('/admin/settings');
   document.getElementById('set-title').value = data.site_title || '';
@@ -509,9 +469,6 @@ document.querySelectorAll('.nav-btn[data-tab]').forEach((btn) => {
 
 document.getElementById('msg-search').addEventListener('click', loadMessages);
 document.getElementById('tarot-search').addEventListener('click', loadTarotReadings);
-
-document.getElementById('load-works').addEventListener('click', () => loadWorks());
-document.getElementById('activity-select').addEventListener('change', () => loadWorks());
 document.getElementById('save-settings').addEventListener('click', saveSettings);
 document.getElementById('moment-refresh').addEventListener('click', loadMoments);
 document.getElementById('moment-status-filter').addEventListener('change', loadMoments);
