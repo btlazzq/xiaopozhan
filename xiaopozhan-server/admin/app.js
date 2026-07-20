@@ -86,6 +86,12 @@ async function login() {
   }
 }
 
+function formatIpCell(ip, location) {
+  const ipText = escapeHtml(ip || '-');
+  if (!location) return ipText;
+  return `<div class="ip-cell">${ipText}<span class="ip-loc">${escapeHtml(location)}</span></div>`;
+}
+
 async function loadDashboard() {
   const data = await request('/admin/dashboard');
   const stats = data.stats || {};
@@ -102,7 +108,7 @@ async function loadDashboard() {
   tbody.innerHTML = (data.recentMessages || []).map((m) => `
     <tr>
       <td>${escapeHtml(m.content)}</td>
-      <td>${escapeHtml(m.ip || '-')}</td>
+      <td>${formatIpCell(m.ip, m.ip_location)}</td>
       <td><span class="status-tag status-${m.status}">${STATUS_MAP[m.status] || m.status}</span></td>
       <td>${m.created_at}</td>
     </tr>
@@ -369,7 +375,7 @@ async function loadMessages() {
   tbody.innerHTML = (data.items || []).map((m) => `
     <tr>
       <td>${escapeHtml(m.content)}</td>
-      <td>${m.ip || '-'}</td>
+      <td>${formatIpCell(m.ip, m.ip_location)}</td>
       <td>${m.created_at}</td>
       <td>
         <button class="btn sm danger" onclick="deleteMessage(${m.id})">删除</button>
@@ -408,7 +414,7 @@ async function loadTarotReadings() {
       <td>${r.id}</td>
       <td style="max-width:180px;word-break:break-all">${escapeHtml(r.question)}</td>
       <td style="font-size:0.78rem">${escapeHtml(formatTarotCards(r.cards))}</td>
-      <td>${r.ip || '-'}</td>
+      <td>${formatIpCell(r.ip, r.ip_location)}</td>
       <td>${r.created_at}</td>
       <td><button class="btn sm danger" onclick="deleteTarotReading(${r.id})">删除</button></td>
     </tr>

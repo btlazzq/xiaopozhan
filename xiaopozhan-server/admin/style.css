@@ -171,6 +171,19 @@ body {
 
 .table th { color: #888; font-weight: 500; }
 
+.ip-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+
+.ip-loc {
+  color: #9aa3b2;
+  font-size: 0.78rem;
+}
+
 .status-tag {
   display: inline-block;
   padding: 2px 8px;

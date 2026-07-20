@@ -11,6 +11,7 @@ const { ensureAssetsTable } = dbModule;
 const { uploadsDir, ensureUploadsDir } = require('../paths');
 const { SPINE_MATERIAL_LIST } = require('../spineMaterials');
 const { authMiddleware, JWT_SECRET } = require('../middleware/auth');
+const { enrichWithLocation } = require('../ipLocation');
 
 const router = express.Router();
 
@@ -165,19 +166,25 @@ router.delete('/contents/:id', authMiddleware, (req, res) => {
   res.json({ success: true });
 });
 
-router.get('/messages', authMiddleware, (req, res) => {
-  const { status, keyword } = req.query;
-  let sql = 'SELECT * FROM messages WHERE 1=1';
-  const params = [];
-  if (status) {
-    sql += ' AND status = ?';
-    params.push(status);
-  } else {
-    sql += " AND status != 'deleted'";
+router.get('/messages', authMiddleware, async (req, res) => {
+  try {
+    const { status, keyword } = req.query;
+    let sql = 'SELECT * FROM messages WHERE 1=1';
+    const params = [];
+    if (status) {
+      sql += ' AND status = ?';
+      params.push(status);
+    } else {
+      sql += " AND status != 'deleted'";
+    }
+    if (keyword) { sql += ' AND content LIKE ?'; params.push(`%${keyword}%`); }
+    sql += ' ORDER BY created_at DESC LIMIT 500';
+    const items = await enrichWithLocation(db.prepare(sql).all(...params));
+    res.json({ items });
+  } catch (e) {
+    console.error('messages list error:', e);
+    res.status(500).json({ error: e.message || '服务器错误' });
   }
-  if (keyword) { sql += ' AND content LIKE ?'; params.push(`%${keyword}%`); }
-  sql += ' ORDER BY created_at DESC';
-  res.json({ items: db.prepare(sql).all(...params) });
 });
 
 router.put('/messages/:id', authMiddleware, (req, res) => {
@@ -198,30 +205,37 @@ router.post('/messages/batch', authMiddleware, (req, res) => {
   res.json({ success: true });
 });
 
-router.get('/dashboard', authMiddleware, (req, res) => {
-  const today = new Date().toISOString().slice(0, 10);
-  const publicMessages = db.prepare("SELECT COUNT(*) as c FROM messages WHERE status = 'approved'").get().c;
-  const hiddenMessages = db.prepare("SELECT COUNT(*) as c FROM messages WHERE status = 'hidden'").get().c;
-  const activityWorks = db.prepare('SELECT COUNT(*) as c FROM activity_works').get().c;
-  const todayMessages = db.prepare("SELECT COUNT(*) as c FROM messages WHERE date(created_at) = ?").get(today).c;
-  const momentCount = db.prepare("SELECT COUNT(*) as c FROM contents WHERE type='moment' AND status='published'").get().c;
-  const musicCount = db.prepare("SELECT COUNT(*) as c FROM contents WHERE type='music' AND status='published'").get().c;
-  const videoCount = db.prepare("SELECT COUNT(*) as c FROM contents WHERE type='video' AND status='published'").get().c;
-  const recentMessages = db.prepare(
-    'SELECT id, content, status, ip, created_at FROM messages ORDER BY created_at DESC LIMIT 8'
-  ).all();
-  res.json({
-    stats: {
-      publicMessages,
-      hiddenMessages,
-      activityWorks,
-      todayMessages,
-      momentCount,
-      musicCount,
-      videoCount
-    },
-    recentMessages
-  });
+router.get('/dashboard', authMiddleware, async (req, res) => {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const publicMessages = db.prepare("SELECT COUNT(*) as c FROM messages WHERE status = 'approved'").get().c;
+    const hiddenMessages = db.prepare("SELECT COUNT(*) as c FROM messages WHERE status = 'hidden'").get().c;
+    const activityWorks = db.prepare('SELECT COUNT(*) as c FROM activity_works').get().c;
+    const todayMessages = db.prepare("SELECT COUNT(*) as c FROM messages WHERE date(created_at) = ?").get(today).c;
+    const momentCount = db.prepare("SELECT COUNT(*) as c FROM contents WHERE type='moment' AND status='published'").get().c;
+    const musicCount = db.prepare("SELECT COUNT(*) as c FROM contents WHERE type='music' AND status='published'").get().c;
+    const videoCount = db.prepare("SELECT COUNT(*) as c FROM contents WHERE type='video' AND status='published'").get().c;
+    const recentMessages = await enrichWithLocation(
+      db.prepare(
+        'SELECT id, content, status, ip, created_at FROM messages ORDER BY created_at DESC LIMIT 8'
+      ).all()
+    );
+    res.json({
+      stats: {
+        publicMessages,
+        hiddenMessages,
+        activityWorks,
+        todayMessages,
+        momentCount,
+        musicCount,
+        videoCount
+      },
+      recentMessages
+    });
+  } catch (e) {
+    console.error('dashboard error:', e);
+    res.status(500).json({ error: e.message || '服务器错误' });
+  }
 });
 
 router.get('/settings', authMiddleware, (req, res) => {
@@ -258,25 +272,31 @@ router.get('/activities/:id/works', authMiddleware, (req, res) => {
   res.json({ items });
 });
 
-router.get('/tarot', authMiddleware, (req, res) => {
-  const keyword = (req.query.keyword || '').trim();
-  let sql = 'SELECT * FROM tarot_readings WHERE 1=1';
-  const params = [];
-  if (keyword) {
-    sql += ' AND (question LIKE ? OR cards_json LIKE ? OR ip LIKE ?)';
-    const kw = `%${keyword}%`;
-    params.push(kw, kw, kw);
+router.get('/tarot', authMiddleware, async (req, res) => {
+  try {
+    const keyword = (req.query.keyword || '').trim();
+    let sql = 'SELECT * FROM tarot_readings WHERE 1=1';
+    const params = [];
+    if (keyword) {
+      sql += ' AND (question LIKE ? OR cards_json LIKE ? OR ip LIKE ?)';
+      const kw = `%${keyword}%`;
+      params.push(kw, kw, kw);
+    }
+    sql += ' ORDER BY created_at DESC LIMIT 200';
+    const rows = db.prepare(sql).all(...params).map((row) => ({
+      id: row.id,
+      question: row.question,
+      ip: row.ip,
+      user_agent: row.user_agent,
+      created_at: row.created_at,
+      cards: JSON.parse(row.cards_json || '[]'),
+    }));
+    const items = await enrichWithLocation(rows);
+    res.json({ items });
+  } catch (e) {
+    console.error('tarot list error:', e);
+    res.status(500).json({ error: e.message || '服务器错误' });
   }
-  sql += ' ORDER BY created_at DESC LIMIT 200';
-  const items = db.prepare(sql).all(...params).map((row) => ({
-    id: row.id,
-    question: row.question,
-    ip: row.ip,
-    user_agent: row.user_agent,
-    created_at: row.created_at,
-    cards: JSON.parse(row.cards_json || '[]'),
-  }));
-  res.json({ items });
 });
 
 router.delete('/tarot/:id', authMiddleware, (req, res) => {
