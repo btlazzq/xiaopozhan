@@ -349,7 +349,10 @@ async function uploadMomentFile() {
   const input = document.getElementById('upload-moment-file');
   const file = input.files?.[0];
   if (!file) return alert('请先选择文件');
-  const isVideo = file.type.startsWith('video/');
+  const name = (file.name || '').toLowerCase();
+  const isVideo =
+    file.type.startsWith('video/') ||
+    /\.(mp4|mov|m4v|webm|avi)$/.test(name);
   try {
     const url = await uploadFile(file, isVideo ? 'video' : 'image');
     let list = [];

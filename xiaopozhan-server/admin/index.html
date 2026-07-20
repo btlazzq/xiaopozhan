@@ -223,16 +223,16 @@
         <label>媒体 URL（音频/视频文件）</label>
         <div class="upload-row">
           <input id="content-media" type="text" />
-          <input type="file" id="upload-media" accept="audio/*,video/*" />
+          <input type="file" id="upload-media" accept="audio/*,video/*,.mp3,.wav,.m4a,.aac,.mp4,.mov,.webm,.m4v" />
           <button class="btn sm" onclick="uploadFor('media')">上传媒体</button>
         </div>
       </div>
       <div id="field-media-json" class="field-row hidden">
         <label>瞬间附件 JSON（fileList）</label>
         <textarea id="content-media-json" rows="5" placeholder='[{"fileUrl":"/uploads/xx.mp4","fileType":"video","coverUrl":"/uploads/cover.png"}]'></textarea>
-        <p class="hint">fileType: image 或 video；可先上传文件后把 URL 填入 JSON</p>
+        <p class="hint">fileType: image 或 video；支持 mp4/mov、mp3/m4a 等；可先上传文件后把 URL 填入 JSON</p>
         <div class="upload-row">
-          <input type="file" id="upload-moment-file" />
+          <input type="file" id="upload-moment-file" accept="image/*,video/*,audio/*,.mp4,.mov,.webm,.mp3,.m4a,.wav" />
           <button class="btn sm" onclick="uploadMomentFile()">上传并追加到 JSON</button>
         </div>
       </div>

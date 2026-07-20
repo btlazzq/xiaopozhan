@@ -26,9 +26,14 @@ app.use('/uploads', (req, res, next) => {
   next();
 }, express.static(uploadsDir, {
   setHeaders(res, filePath) {
-    if (filePath.endsWith('.mp3')) res.setHeader('Content-Type', 'audio/mpeg');
-    else if (filePath.endsWith('.wav')) res.setHeader('Content-Type', 'audio/wav');
-    else if (filePath.endsWith('.mp4')) res.setHeader('Content-Type', 'video/mp4');
+    const lower = filePath.toLowerCase();
+    if (lower.endsWith('.mp3')) res.setHeader('Content-Type', 'audio/mpeg');
+    else if (lower.endsWith('.wav')) res.setHeader('Content-Type', 'audio/wav');
+    else if (lower.endsWith('.m4a') || lower.endsWith('.aac')) res.setHeader('Content-Type', 'audio/mp4');
+    else if (lower.endsWith('.ogg') || lower.endsWith('.oga')) res.setHeader('Content-Type', 'audio/ogg');
+    else if (lower.endsWith('.mp4') || lower.endsWith('.m4v')) res.setHeader('Content-Type', 'video/mp4');
+    else if (lower.endsWith('.webm')) res.setHeader('Content-Type', 'video/webm');
+    else if (lower.endsWith('.mov')) res.setHeader('Content-Type', 'video/quicktime');
   }
 }));
 app.use('/admin', express.static(path.join(__dirname, '../admin')));
