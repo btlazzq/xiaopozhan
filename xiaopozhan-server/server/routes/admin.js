@@ -26,7 +26,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({
   storage,
-  limits: { fileSize: 100 * 1024 * 1024 }
+  limits: { fileSize: 200 * 1024 * 1024 }
 });
 
 router.post('/login', (req, res) => {
@@ -47,28 +47,41 @@ router.post('/upload', authMiddleware, (req, res) => {
   upload.single('file')(req, res, (err) => {
     if (err) {
       console.error('upload multer error:', err);
-      const msg = err.code === 'LIMIT_FILE_SIZE' ? '文件超过 100MB 限制' : (err.message || '上传失败');
-      return res.status(400).json({ error: msg });
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: '文件超过 200MB 限制，请压缩后再传' });
+      }
+      return res.status(400).json({ error: err.message || '上传失败' });
     }
     try {
-      if (typeof ensureAssetsTable === 'function') ensureAssetsTable();
       ensureUploadsDir();
       if (!req.file) return res.status(400).json({ error: '未上传文件' });
+
       const type = req.body.type || 'file';
       const url = `/uploads/${req.file.filename}`;
-      const result = db.prepare(`
-        INSERT INTO assets (type, filename, url, size, mime_type, category)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).run(
-        type,
-        req.file.originalname,
-        url,
-        req.file.size,
-        req.file.mimetype,
-        req.body.category || ''
-      );
+      let id = null;
+
+      try {
+        if (typeof ensureAssetsTable === 'function') ensureAssetsTable();
+        const result = db.prepare(`
+          INSERT INTO assets (type, filename, url, size, mime_type, category)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `).run(
+          type,
+          req.file.originalname,
+          url,
+          req.file.size,
+          req.file.mimetype || '',
+          req.body.category || ''
+        );
+        id = result.lastInsertRowid;
+      } catch (dbErr) {
+        // 文件已落盘，记录表失败不阻断上传（避免 mp4 等大文件“上传失败”）
+        console.error('upload assets insert skipped:', dbErr.message);
+      }
+
+      console.log(`upload ok: ${req.file.originalname} -> ${url} (${req.file.size} bytes)`);
       res.json({
-        id: result.lastInsertRowid,
+        id,
         url,
         filename: req.file.originalname,
         size: req.file.size

@@ -122,14 +122,27 @@ async function uploadFile(file, type) {
   form.append('file', file);
   form.append('type', type);
   const token = getToken();
-  const res = await fetch(API + '/admin/upload', {
-    method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    body: form
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || '上传失败');
-  return data.url;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10 * 60 * 1000);
+  try {
+    const res = await fetch(API + '/admin/upload', {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+      signal: controller.signal
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error || `上传失败 (HTTP ${res.status})`);
+    }
+    if (!data.url) throw new Error('上传成功但未返回文件地址');
+    return data.url;
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error('上传超时，请换更小的文件或检查网络');
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function toggleContentFields(type) {
@@ -335,13 +348,16 @@ async function uploadFor(field) {
   const input = field === 'cover' ? document.getElementById('upload-cover') : document.getElementById('upload-media');
   const file = input.files?.[0];
   if (!file) return alert('请先选择文件');
+  const msg = document.getElementById('content-modal-msg');
+  const sizeMb = (file.size / 1024 / 1024).toFixed(1);
+  msg.textContent = `正在上传 ${file.name}（${sizeMb} MB）…`;
   try {
     const url = await uploadFile(file, field === 'cover' ? 'image' : 'media');
     if (field === 'cover') document.getElementById('content-cover').value = url;
     else document.getElementById('content-media').value = url;
-    document.getElementById('content-modal-msg').textContent = '上传成功: ' + url;
+    msg.textContent = '上传成功: ' + url;
   } catch (e) {
-    document.getElementById('content-modal-msg').textContent = e.message;
+    msg.textContent = '上传失败: ' + (e.message || e);
   }
 }
 
@@ -353,15 +369,17 @@ async function uploadMomentFile() {
   const isVideo =
     file.type.startsWith('video/') ||
     /\.(mp4|mov|m4v|webm|avi)$/.test(name);
+  const msg = document.getElementById('content-modal-msg');
+  msg.textContent = `正在上传 ${file.name}…`;
   try {
     const url = await uploadFile(file, isVideo ? 'video' : 'image');
     let list = [];
     try { list = JSON.parse(document.getElementById('content-media-json').value || '[]'); } catch { list = []; }
     list.push({ fileUrl: url, fileType: isVideo ? 'video' : 'image' });
     document.getElementById('content-media-json').value = JSON.stringify(list, null, 2);
-    document.getElementById('content-modal-msg').textContent = '已追加到 JSON';
+    msg.textContent = '已追加到 JSON';
   } catch (e) {
-    document.getElementById('content-modal-msg').textContent = e.message;
+    msg.textContent = '上传失败: ' + (e.message || e);
   }
 }
 
