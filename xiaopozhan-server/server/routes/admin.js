@@ -11,7 +11,7 @@ const { ensureAssetsTable } = dbModule;
 const { uploadsDir, ensureUploadsDir } = require('../paths');
 const { SPINE_MATERIAL_LIST } = require('../spineMaterials');
 const { authMiddleware, JWT_SECRET } = require('../middleware/auth');
-const { enrichWithLocation } = require('../ipLocation');
+const { enrichWithLocation, lookupMany, normalizeIp } = require('../ipLocation');
 
 const router = express.Router();
 
@@ -314,6 +314,61 @@ router.get('/tarot', authMiddleware, async (req, res) => {
 
 router.delete('/tarot/:id', authMiddleware, (req, res) => {
   db.prepare('DELETE FROM tarot_readings WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
+});
+
+// 访客记录：按会话聚合成访问轨迹
+router.get('/visits', authMiddleware, async (req, res) => {
+  try {
+    const limitSessions = Math.min(parseInt(req.query.limit, 10) || 100, 300);
+    const rows = db.prepare(
+      'SELECT id, session_id, ip, user_agent, path, page_name, referrer, created_at FROM page_views ORDER BY id DESC LIMIT 4000'
+    ).all();
+
+    const sessions = new Map();
+    // rows 是倒序；组内轨迹需要正序，故从后往前遍历
+    for (let i = rows.length - 1; i >= 0; i--) {
+      const r = rows[i];
+      const key = r.session_id || `ip:${r.ip}`;
+      if (!sessions.has(key)) {
+        sessions.set(key, {
+          session_id: r.session_id || '',
+          ip: r.ip,
+          user_agent: r.user_agent || '',
+          referrer: r.referrer || '',
+          first_time: r.created_at,
+          last_time: r.created_at,
+          count: 0,
+          trail: []
+        });
+      }
+      const s = sessions.get(key);
+      s.count += 1;
+      s.last_time = r.created_at;
+      s.trail.push({
+        path: r.path,
+        page_name: r.page_name || r.path,
+        created_at: r.created_at
+      });
+      if (!s.user_agent && r.user_agent) s.user_agent = r.user_agent;
+    }
+
+    let list = [...sessions.values()].sort(
+      (a, b) => new Date(b.last_time) - new Date(a.last_time)
+    ).slice(0, limitSessions);
+
+    const locMap = await lookupMany(list.map((s) => s.ip));
+    list = list.map((s) => ({ ...s, ip_location: locMap[normalizeIp(s.ip)] || '' }));
+
+    res.json({ items: list, total_views: db.prepare('SELECT COUNT(*) AS c FROM page_views').get().c });
+  } catch (e) {
+    console.error('visits error:', e);
+    res.status(500).json({ error: e.message || '服务器错误' });
+  }
+});
+
+router.delete('/visits', authMiddleware, (req, res) => {
+  db.prepare('DELETE FROM page_views').run();
   res.json({ success: true });
 });
 

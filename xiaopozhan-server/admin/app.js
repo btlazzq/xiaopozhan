@@ -54,6 +54,7 @@ function switchTab(tab) {
     tarot: '塔罗占卜',
     moments: '瞬间 /liberty',
     'music-admin': '音乐 /music',
+    visits: '访客记录',
     settings: '系统设置'
   };
   document.getElementById('page-title').textContent = titles[tab] || tab;
@@ -63,6 +64,7 @@ function switchTab(tab) {
   if (tab === 'tarot') loadTarotReadings();
   if (tab === 'moments') loadMoments();
   if (tab === 'music-admin') loadMusicAdmin();
+  if (tab === 'visits') loadVisits();
   if (tab === 'settings') loadSettings();
 }
 
@@ -448,6 +450,79 @@ async function deleteTarotReading(id) {
   await loadTarotReadings();
 }
 
+function shortDevice(ua) {
+  if (!ua) return '未知设备';
+  let os = '';
+  if (/iPhone|iPad|iPod/.test(ua)) os = 'iOS';
+  else if (/Android/.test(ua)) os = 'Android';
+  else if (/Windows/.test(ua)) os = 'Windows';
+  else if (/Mac OS X|Macintosh/.test(ua)) os = 'Mac';
+  else if (/Linux/.test(ua)) os = 'Linux';
+
+  let br = '';
+  if (/MicroMessenger/.test(ua)) br = '微信';
+  else if (/Edg\//.test(ua)) br = 'Edge';
+  else if (/Chrome\//.test(ua)) br = 'Chrome';
+  else if (/Firefox\//.test(ua)) br = 'Firefox';
+  else if (/Safari\//.test(ua)) br = 'Safari';
+
+  return [os, br].filter(Boolean).join(' · ') || '未知设备';
+}
+
+function fmtTime(str) {
+  if (!str) return '-';
+  return String(str).replace('T', ' ').slice(0, 19);
+}
+
+function timeOnly(str) {
+  return String(str || '').replace('T', ' ').slice(11, 19);
+}
+
+async function loadVisits() {
+  const listEl = document.getElementById('visits-list');
+  const summaryEl = document.getElementById('visits-summary');
+  listEl.innerHTML = '<p class="hint">加载中…</p>';
+  try {
+    const data = await request('/admin/visits');
+    const items = data.items || [];
+    summaryEl.textContent = `共 ${items.length} 个会话 · ${data.total_views || 0} 次浏览`;
+
+    if (!items.length) {
+      listEl.innerHTML = '<p class="hint">暂无访客记录</p>';
+      return;
+    }
+
+    listEl.innerHTML = items.map((s) => {
+      const trail = (s.trail || []).map((t) =>
+        `<span class="trail-step">${escapeHtml(t.page_name)}<em>${timeOnly(t.created_at)}</em></span>`
+      ).join('<span class="trail-arrow">→</span>');
+
+      const loc = s.ip_location ? `<span class="ip-loc">${escapeHtml(s.ip_location)}</span>` : '';
+
+      return `
+        <div class="visit-card">
+          <div class="visit-head">
+            <span class="visit-ip">${escapeHtml(s.ip || '-')}</span>
+            ${loc}
+            <span class="visit-device">${escapeHtml(shortDevice(s.user_agent))}</span>
+            <span class="visit-count">${s.count} 步</span>
+          </div>
+          <div class="visit-time">${fmtTime(s.first_time)} ~ ${timeOnly(s.last_time)}</div>
+          <div class="visit-trail">${trail}</div>
+        </div>
+      `;
+    }).join('');
+  } catch (e) {
+    listEl.innerHTML = `<p class="hint">加载失败: ${escapeHtml(e.message || '')}</p>`;
+  }
+}
+
+async function clearVisits() {
+  if (!confirm('确定清空所有访客记录？此操作不可恢复。')) return;
+  await request('/admin/visits', { method: 'DELETE' });
+  await loadVisits();
+}
+
 async function loadSettings() {
   const data = await request('/admin/settings');
   document.getElementById('set-title').value = data.site_title || '';
@@ -496,6 +571,8 @@ document.querySelectorAll('.nav-btn[data-tab]').forEach((btn) => {
 
 document.getElementById('msg-search').addEventListener('click', loadMessages);
 document.getElementById('tarot-search').addEventListener('click', loadTarotReadings);
+document.getElementById('visits-refresh').addEventListener('click', loadVisits);
+document.getElementById('visits-clear').addEventListener('click', clearVisits);
 document.getElementById('save-settings').addEventListener('click', saveSettings);
 document.getElementById('moment-refresh').addEventListener('click', loadMoments);
 document.getElementById('moment-status-filter').addEventListener('change', loadMoments);

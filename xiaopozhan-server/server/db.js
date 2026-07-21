@@ -126,6 +126,19 @@ function initDb() {
       category TEXT,
       created_at TEXT DEFAULT (datetime('now','localtime'))
     );
+
+    CREATE TABLE IF NOT EXISTS page_views (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id TEXT,
+      ip TEXT,
+      user_agent TEXT,
+      path TEXT,
+      page_name TEXT,
+      referrer TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_page_views_session ON page_views(session_id);
+    CREATE INDEX IF NOT EXISTS idx_page_views_created ON page_views(created_at);
   `);
 
   const settings = db.prepare('SELECT id FROM system_settings WHERE id = 1').get();

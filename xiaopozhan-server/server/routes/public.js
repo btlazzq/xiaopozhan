@@ -299,4 +299,54 @@ router.post('/tarot/draw', (req, res) => {
   });
 });
 
+router.post('/track', (req, res) => {
+  try {
+    const ip = req.ip || req.connection.remoteAddress || 'unknown';
+    const blacklisted = db.prepare('SELECT id FROM ip_blacklist WHERE ip = ?').get(ip);
+    if (blacklisted) return res.json({ ok: false });
+
+    let { sessionId, path: pagePath, pageName, referrer } = req.body || {};
+    pagePath = String(pagePath || '').slice(0, 300);
+    pageName = String(pageName || '').slice(0, 100);
+    referrer = String(referrer || '').slice(0, 300);
+    sessionId = String(sessionId || '').slice(0, 64);
+    if (!pagePath) return res.status(400).json({ error: 'path 不能为空' });
+
+    // 去抖：同会话同页面 3 秒内不重复记录
+    if (sessionId) {
+      const last = db.prepare(
+        "SELECT created_at FROM page_views WHERE session_id = ? AND path = ? ORDER BY id DESC LIMIT 1"
+      ).get(sessionId, pagePath);
+      if (last && Date.now() - new Date(last.created_at).getTime() < 3000) {
+        return res.json({ ok: true, skipped: true });
+      }
+    }
+
+    db.prepare(`
+      INSERT INTO page_views (session_id, ip, user_agent, path, page_name, referrer)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(
+      sessionId,
+      ip,
+      (req.headers['user-agent'] || '').slice(0, 400),
+      pagePath,
+      pageName,
+      referrer
+    );
+
+    // 容量保护：仅保留最近 5000 条
+    const count = db.prepare('SELECT COUNT(*) AS c FROM page_views').get().c;
+    if (count > 5000) {
+      db.prepare(
+        'DELETE FROM page_views WHERE id IN (SELECT id FROM page_views ORDER BY id ASC LIMIT ?)'
+      ).run(count - 5000);
+    }
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('track error:', e.message);
+    res.json({ ok: false });
+  }
+});
+
 module.exports = router;

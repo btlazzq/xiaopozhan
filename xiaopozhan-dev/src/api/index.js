@@ -64,6 +64,51 @@ export function getDeviceId() {
   return id;
 }
 
+// 访客会话 ID：一次浏览会话内保持不变（关闭标签后重置）
+export function getSessionId() {
+  let id = sessionStorage.getItem('visit_session');
+  if (!id) {
+    id = 's_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    sessionStorage.setItem('visit_session', id);
+  }
+  return id;
+}
+
+const PAGE_NAME_MAP = {
+  '/': '首页',
+  '/catalogue': '目录',
+  '/liberty': '瞬间',
+  '/leaveWords': '匿名留言',
+  '/commentWall': '塔罗占卜',
+  '/postcard': '明信片',
+  '/music': '音乐/视频',
+  '/musicTime': '音乐播放',
+  '/videoTime': '视频播放'
+};
+
+export function resolvePageName(path, query) {
+  const base = PAGE_NAME_MAP[path] || path || '未知';
+  if (query && query.no != null && query.no !== '') {
+    return `${base}(no=${query.no})`;
+  }
+  return base;
+}
+
+// 上报一次页面访问（静默失败，不打扰用户）
+export function trackVisit(to) {
+  try {
+    const path = to?.path || (typeof to === 'string' ? to : '/');
+    const query = to?.query || {};
+    const payload = {
+      sessionId: getSessionId(),
+      path: to?.fullPath || path,
+      pageName: resolvePageName(path, query),
+      referrer: document.referrer || ''
+    };
+    http.post('/track', payload).catch(() => {});
+  } catch { /* ignore */ }
+}
+
 export function formatMessageTime(str) {
   if (!str) return '';
   return str.replace('T', ' ').slice(0, 19);

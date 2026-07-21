@@ -60,4 +60,10 @@ const router = createRouter({
     routes
 })
 
+import { trackVisit } from "@/api";
+
+router.afterEach((to) => {
+    trackVisit(to);
+})
+
 export default router

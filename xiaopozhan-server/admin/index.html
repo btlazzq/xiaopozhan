@@ -29,6 +29,7 @@
         <button class="nav-btn" data-tab="tarot">塔罗占卜</button>
         <button class="nav-btn" data-tab="moments">瞬间 /liberty</button>
         <button class="nav-btn" data-tab="music-admin">音乐 /music</button>
+        <button class="nav-btn" data-tab="visits">访客记录</button>
         <button class="nav-btn" data-tab="settings">系统设置</button>
       </nav>
       <button id="logout-btn" class="nav-btn logout">退出登录</button>
@@ -150,6 +151,18 @@
             </thead>
             <tbody id="video-body"></tbody>
           </table>
+        </div>
+      </section>
+
+      <section id="tab-visits" class="tab-panel hidden">
+        <p class="page-hint">按<strong>访问会话</strong>展示访客轨迹：可看到 IP、归属地、设备，以及 TA 依次浏览了哪些页面、停在哪一步。仅管理端可见。</p>
+        <div class="toolbar">
+          <span id="visits-summary" class="hint"></span>
+          <button class="btn" id="visits-refresh">刷新</button>
+          <button class="btn danger" id="visits-clear">清空记录</button>
+        </div>
+        <div class="card">
+          <div id="visits-list"></div>
         </div>
       </section>
 
