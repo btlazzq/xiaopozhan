@@ -16,8 +16,14 @@
               ref="videoPlayer"
               :src="videoList[currentIndex].videoSrc"
               :poster=" videoList[currentIndex].videoCover"
-              preload="auto"
+              preload="metadata"
               controls
+              playsinline
+              webkit-playsinline
+              x5-playsinline
+              x5-video-player-type="h5"
+              x5-video-player-fullscreen="false"
+              x5-video-orientation="portraint"
               @play="handleVideoPlay"
               @pause="handleVideoPause"
             ></video>
