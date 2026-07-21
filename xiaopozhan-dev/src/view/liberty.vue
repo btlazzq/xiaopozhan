@@ -541,13 +541,14 @@ body {
 
 .wrapper_content_01 .imgList {
   margin: 0 auto;
-  overflow-y: scroll;
+  overflow: hidden;
   font-size: 0;
   display: flex;
-  align-items: stretch;
+  align-items: center;
   justify-content: center;
   position: relative;
-  width: fit-content;
+  width: 100%;
+  max-width: 100%;
 }
 
 .imgList .video_c {
@@ -558,15 +559,20 @@ body {
 }
 
 .imgList .imgBox {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   display: inline-block;
   position: relative;
+  max-width: 100%;
 }
 
 .imgBox img {
   display: block;
-  height: 2.8rem;
+  max-width: 100%;
+  max-height: 3.6rem;
   width: auto;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 0.08rem;
   object-fit: contain;
   object-position: center;
 }
