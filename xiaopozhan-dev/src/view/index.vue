@@ -62,8 +62,7 @@ import router from "@/router";
 
 /* 例如：将"1234.mp4"这个视频放到了"src/assets/index/"文件夹下后，
   修改下面的代码就变为"import videoUrl from "@/assets/index/1234.mp4"" */
-// welcome.mp4 未随项目分发，暂用已有视频占位，替换时改回 @/assets/index/welcome.mp4
-import videoUrl from "@/assets/leave_words/shui.mp4";
+import videoUrl from "@/assets/index/welcome.mp4";
 
 export default {
   name: "index",
