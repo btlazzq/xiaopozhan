@@ -31,7 +31,10 @@
                     class="wrapper_content_01"
                     v-if="item.fileList.length>0"
                   >
-                    <div class="imgList">
+                    <div
+                      class="imgList"
+                      :class="{ 'imgList--multi': item.fileList.length > 1 }"
+                    >
                       <template
                         v-for="(childItem ,index) in item.fileList"
                         :key="childItem.id"
@@ -510,7 +513,7 @@ body {
   display: block;
   width: 100%;
   margin: 0.35rem auto 0.3rem;
-  overflow-y: scroll;
+  overflow: visible;
 }
 
 .wrapper_content_01 .play_cq {
@@ -549,13 +552,29 @@ body {
   position: relative;
   width: 100%;
   max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* 多图：横向滑动卡片 */
+.wrapper_content_01 .imgList--multi {
+  justify-content: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: 0.12rem;
+  padding: 0 0.2rem 0.08rem 0.28rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.wrapper_content_01 .imgList--multi::-webkit-scrollbar {
+  display: none;
 }
 
 .imgList .video_c {
   display: block;
-  width: 100%;
-  height: 100%;
   white-space: normal;
+  flex-shrink: 0;
 }
 
 .imgList .imgBox {
@@ -563,6 +582,15 @@ body {
   display: inline-block;
   position: relative;
   max-width: 100%;
+}
+
+.imgList--multi .video_c,
+.imgList--multi .imgBox {
+  flex: 0 0 auto;
+  width: 2.6rem;
+  height: 3.4rem;
+  scroll-snap-align: start;
+  max-width: none;
 }
 
 .imgBox img {
@@ -575,6 +603,36 @@ body {
   border-radius: 0.08rem;
   object-fit: contain;
   object-position: center;
+}
+
+.imgList--multi .imgBox img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  border-radius: 0.1rem;
+}
+
+.imgList--multi .video_c .imgBox {
+  width: 100%;
+  height: 100%;
+}
+
+.imgList--multi .video_c .imgBox > div[style] {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.imgList--multi .play_cq {
+  width: 0.56rem;
+  height: 0.56rem;
+}
+
+.imgList--multi .play_cq:after {
+  border-top-width: 0.12rem;
+  border-bottom-width: 0.12rem;
+  border-left-width: 0.16rem;
 }
 
 .PhotoView {
